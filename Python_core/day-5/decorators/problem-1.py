@@ -29,7 +29,19 @@ slow_add(2, 3)
 # prints: "Function slow_add took 0.1001s"
 # returns: 5
 '''
-
+import time
 def timer(func):
-    def wrapper():
-        pass
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        res = func(*args, **kwargs)
+        end = time.time()
+        print(f"Function {func.__name__} took {end - start: .4f}s")
+        return res
+    return wrapper
+    
+@timer 
+def slow_add(a,b):
+    time.sleep(0.1)
+    return a+b
+
+print(slow_add(2,3))
