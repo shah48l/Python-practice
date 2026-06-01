@@ -17,19 +17,46 @@ __init__ must not reload config if the instance already exists
 Simulate env vars with a plain dict instead of os.environ — hardcode {"DB_URL": "postgres://localhost/app", "SECRET_KEY": "s3cr3t", "DEBUG": "true"}
 '''
 class ConfigManager:
-    _instance = None # Class level slot to hold instance 
-
+    _instance = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-        
         return cls._instance
-    
-    def __init__(self):
-        print ("__init__ ran")
-a = ConfigManager()
-b = ConfigManager()
 
-# assert a is b 
-# print("Same instance:", a is b)
+    def __init__(self):
+        if hasattr(self, '_initialized'):
+            return
+
+        self._initialized = True
+
+        self._config = {
+            "DB_URL": "postgres://localhost/app",
+            "SECRET_KEY": "s3cr3t",
+            "DEBUG": "true"
+        }
+
+    def get(self, key: str):
+        if key not in self._config:
+            raise KeyError(
+                f"Config key '{key}' not found. Valid: {list(self._config)}"
+            )
+        return self._config[key]
+
+    @classmethod
+    def reset(cls):
+        cls._instance = None
+
+
+# Driver
+inst1 = ConfigManager()
+inst2 = ConfigManager()
+
+assert inst1 is inst2
+
+print(inst1.get("DB_URL"))
+
+ConfigManager.reset()
+
+inst3 = ConfigManager()
+print(inst1 is inst3)   # False
